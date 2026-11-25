@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VillageConnect</title>
+
+    <!-- Website design -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Main application container -->
+    <div class="app-container">
+
+        <!-- Website header -->
+        <!-- Website header -->
+<header class="header">
+    <div class="logo">
+        <span class="logo-icon">🏡</span>
+        <h1>VillageConnect</h1>
+    </div>
+
+    <p>Connecting our village, one step at a time.</p>
+
+    <!-- Navigation links -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="problems.html">Problems</a>
+    </nav>
+</header>
+
+        <!-- Login section -->
+        <main class="login-container">
+
+            <div class="login-card">
+
+                <div class="login-icon">📱</div>
+
+                <h2>Welcome Back!</h2>
+
+                <p class="login-description">
+                    Login with your mobile number to access
+                    the VillageConnect attendance system.
+                </p>
+
+                <!-- Phone number form -->
+                <form id="phone-form">
+
+                    <label for="phone">
+                        Mobile Number
+                    </label>
+
+                    <div class="phone-input">
+                        <span class="country-code">+91</span>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            placeholder="Enter 10-digit mobile number"
+                            maxlength="10"
+                            inputmode="numeric"
+                            autocomplete="tel-national"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" id="send-otp">
+                        Send OTP
+                    </button>
+
+                </form>
+
+                <!-- OTP verification section -->
+                <form id="otp-form" hidden>
+
+                    <label for="otp">
+                        Enter 6-digit OTP
+                    </label>
+
+                    <input
+                        type="text"
+                        id="otp"
+                        name="otp"
+                        placeholder="Enter OTP"
+                        maxlength="6"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        required
+                    >
+
+                    <button type="submit" id="verify-otp">
+                        Verify OTP
+                    </button>
+
+                    <button type="button" id="back-button">
+                        Change Mobile Number
+                    </button>
+
+                </form>
+
+                <!-- Login messages -->
+                <p id="message" role="status" aria-live="polite"></p>
+
+                <p class="security-note">
+                    🔒 Your mobile number will be used to
+                    identify attendance updates and reports.
+                </p>
+
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>VillageConnect © 2026</p>
+            <p>Made for our village community</p>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript functionality -->
+    <div id="recaptcha-container"></div>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
