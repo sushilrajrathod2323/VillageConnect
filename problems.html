@@ -297,9 +297,6 @@
 </div>
 
 <script type="module">
-
-    // Firebase imports
-
     import { initializeApp }
         from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 
@@ -313,47 +310,102 @@
         serverTimestamp
     } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
+    import {
+        getAuth,
+        onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
-    // Firebase configuration
-
+    // Same Firebase project as attendance.html
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyAN0_rn-dpXNFzBkKOj8eT0SboCZuEA6hU",
+        authDomain: "villageconnect-f66a2.firebaseapp.com",
+        projectId: "villageconnect-f66a2",
+        storageBucket: "villageconnect-f66a2.firebasestorage.app",
+        messagingSenderId: "326691335569",
+        appId: "1:326691335569:web:66cf4e8dd8b67eff23be30",
+        measurementId: "G-KY82ZB8EBR"
     };
 
-
-    // Initialize Firebase
-
     const app = initializeApp(firebaseConfig);
-
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-
-    // HTML elements
+    const problemCollection = collection(db, "problems");
 
     const problemForm = document.getElementById("problemForm");
-
     const problemList = document.getElementById("problemList");
-
     const message = document.getElementById("message");
-
     const submitButton = document.getElementById("submitButton");
 
-
-    // Store problems received from Firebase
-
     let problems = [];
+    let currentUser = null;
+
+    // Wait for Firebase authentication before accessing Firestore
+    onAuthStateChanged(auth, function(user) {
+
+        if (!user) {
+            message.textContent =
+                "Please log in before reporting a problem.";
+
+            submitButton.disabled = true;
+            document.getElementById("loadingMessage").textContent =
+                "Please log in to view problems.";
+
+            return;
+        }
+
+        currentUser = user;
+
+        console.log("Signed in:", currentUser.uid);
+
+        submitButton.disabled = false;
+
+        // Listen for problems submitted by all users
+        onSnapshot(
+            problemCollection,
+
+            function(snapshot) {
+
+                problems = snapshot.docs.map(function(document) {
+                    return {
+                        id: document.id,
+                        ...document.data()
+                    };
+                });
+
+                // Newest problems first
+                problems.sort(function(a, b) {
+                    const timeA = a.createdAt?.toMillis?.() || 0;
+                    const timeB = b.createdAt?.toMillis?.() || 0;
+
+                    return timeB - timeA;
+                });
+
+                document.getElementById("loadingMessage").textContent = "";
+
+                displayProblems();
+            },
+
+            function(error) {
+
+                console.error("Could not load problems:", error);
+
+                document.getElementById("loadingMessage").textContent =
+                    "Unable to load problems. Check Firestore rules.";
+            }
+        );
+    });
 
 
     // Submit a new problem
-
     problemForm.addEventListener("submit", async function(event) {
 
         event.preventDefault();
+
+        if (!currentUser) {
+            message.textContent = "Please log in first.";
+            return;
+        }
 
         const reporterName =
             document.getElementById("reporterName").value.trim();
@@ -370,42 +422,32 @@
         const location =
             document.getElementById("problemLocation").value.trim();
 
-
-        // Validate contact number
-
         if (!/^[6-9][0-9]{9}$/.test(reporterContact)) {
-
             message.textContent =
                 "Please enter a valid 10-digit mobile number.";
-
             return;
         }
-
 
         try {
 
             submitButton.disabled = true;
-
             message.textContent = "Submitting your problem...";
 
+            const docRef = await addDoc(problemCollection, {
 
-            // Save problem to Firestore
+                reporterName: reporterName,
+                reporterContact: reporterContact,
+                category: category,
+                description: description,
+                location: location,
 
-            const docRef = await addDoc(
-                collection(db, "problems"),
-                {
-                    reporterName: reporterName,
-                    reporterContact: reporterContact,
-                    category: category,
-                    description: description,
-                    location: location,
+                status: "Pending",
 
-                    status: "Pending",
+                // Store the signed-in user's ID
+                userId: currentUser.uid,
 
-                    createdAt: serverTimestamp()
-                }
-            );
-
+                createdAt: serverTimestamp()
+            });
 
             message.textContent =
                 "Problem submitted successfully! ID: " + docRef.id;
@@ -414,28 +456,22 @@
 
         } catch (error) {
 
-            console.error(error);
+            console.error("Error submitting problem:", error);
 
             message.textContent =
-                "Unable to submit problem. Please try again.";
+                "Unable to submit problem: " + error.message;
 
         } finally {
 
             submitButton.disabled = false;
-
         }
-
     });
 
 
-    // Display problems
-
+    // Display problems and update statistics
     function displayProblems() {
 
         problemList.innerHTML = "";
-
-
-        // Calculate statistics
 
         const total = problems.length;
 
@@ -451,41 +487,24 @@
             problem => problem.status === "Resolved"
         ).length;
 
-
         document.getElementById("totalCount").textContent = total;
-
         document.getElementById("pendingCount").textContent = pending;
-
         document.getElementById("progressCount").textContent = progress;
-
         document.getElementById("resolvedCount").textContent = resolved;
 
-
-        // Show message if no problems exist
-
         if (problems.length === 0) {
-
             problemList.innerHTML =
                 '<p class="empty">No problems reported yet.</p>';
-
             return;
         }
-
-
-        // Display each problem
 
         problems.forEach(function(problem) {
 
             const card = document.createElement("div");
-
             card.className = "problem";
 
-
             const title = document.createElement("h3");
-
-            title.textContent =
-                problem.category + " Problem";
-
+            title.textContent = problem.category + " Problem";
 
             const status = document.createElement("span");
 
@@ -497,58 +516,34 @@
 
             status.textContent = problem.status;
 
-
             const id = document.createElement("p");
-
             id.textContent = "Problem ID: " + problem.id;
 
-
             const reporter = document.createElement("p");
-
-            reporter.textContent =
-                "Reporter: " + problem.reporterName;
-
+            reporter.textContent = "Reporter: " + problem.reporterName;
 
             const contact = document.createElement("p");
-
-            contact.textContent =
-                "Contact: " + problem.reporterContact;
-
+            contact.textContent = "Contact: " + problem.reporterContact;
 
             const description = document.createElement("p");
-
-            description.textContent =
-                "Description: " + problem.description;
-
+            description.textContent = "Description: " + problem.description;
 
             const location = document.createElement("p");
-
-            location.textContent =
-                "Location: " + problem.location;
-
+            location.textContent = "Location: " + problem.location;
 
             const date = document.createElement("p");
 
             if (problem.createdAt) {
-
                 date.textContent =
                     "Reported: " +
-                    new Date(problem.createdAt.seconds * 1000)
-                        .toLocaleString();
-
+                    problem.createdAt.toDate().toLocaleString();
             } else {
-
                 date.textContent = "Reported: Just now";
-
             }
 
-
             // Status update control
-
             const statusLabel = document.createElement("label");
-
             statusLabel.textContent = "Update Status: ";
-
 
             const statusSelect = document.createElement("select");
 
@@ -558,23 +553,23 @@
                     const option = document.createElement("option");
 
                     option.value = value;
-
                     option.textContent = value;
 
                     statusSelect.appendChild(option);
-
                 }
             );
 
             statusSelect.value = problem.status;
 
-
             const updateButton = document.createElement("button");
-
             updateButton.textContent = "Update Status";
 
-
             updateButton.addEventListener("click", async function() {
+
+                if (!currentUser) {
+                    alert("Please log in first.");
+                    return;
+                }
 
                 try {
 
@@ -587,86 +582,38 @@
                         }
                     );
 
+                    message.textContent =
+                        "Problem status updated successfully!";
+
                 } catch (error) {
 
-                    console.error(error);
+                    console.error("Error updating status:", error);
 
-                    alert("Unable to update problem status.");
+                    message.textContent =
+                        "Unable to update status: " + error.message;
 
                 } finally {
 
                     updateButton.disabled = false;
-
                 }
-
             });
-
-
-            // Add elements to card
 
             card.appendChild(title);
-
             card.appendChild(status);
-
             card.appendChild(id);
-
             card.appendChild(reporter);
-
             card.appendChild(contact);
-
             card.appendChild(description);
-
             card.appendChild(location);
-
             card.appendChild(date);
-
             card.appendChild(statusLabel);
-
             card.appendChild(statusSelect);
-
             card.appendChild(updateButton);
 
-
             problemList.appendChild(card);
-
         });
-
     }
-
-
-    // Listen for Firestore changes
-
-    onSnapshot(
-        collection(db, "problems"),
-
-        function(snapshot) {
-
-            problems = snapshot.docs.map(function(document) {
-
-                return {
-                    id: document.id,
-                    ...document.data()
-                };
-
-            });
-
-            document.getElementById("loadingMessage").textContent = "";
-
-            displayProblems();
-
-        },
-
-        function(error) {
-
-            console.error(error);
-
-            document.getElementById("loadingMessage").textContent =
-                "Unable to load problems. Check your Firebase settings.";
-
-        }
-    );
-
 </script>
-
 </body>
 </html>
+
