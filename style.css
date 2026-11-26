@@ -1,0 +1,294 @@
+
+/* ==============================
+   VILLAGECONNECT - COLORFUL THEME
+   ============================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #d4fc79, #96e6a1, #84fab0, #8fd3f4);
+    color: #243447;
+}
+
+/* Main container */
+
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+
+.header {
+    text-align: center;
+    padding: 35px 20px;
+    color: white;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.logo-icon {
+    font-size: 42px;
+}
+
+.header h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.header p {
+    font-size: 16px;
+    color: #f0fff4;
+}
+
+/* Login section */
+
+.login-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+/* Login card */
+
+.login-card {
+    width: 100%;
+    max-width: 430px;
+    padding: 40px 35px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 80, 60, 0.2);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Login icon */
+
+.login-icon {
+    width: 85px;
+    height: 85px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a8ff78, #78ffd6);
+    box-shadow: 0 8px 20px rgba(17, 153, 142, 0.2);
+}
+
+/* Login heading */
+
+.login-card h2 {
+    font-size: 28px;
+    color: #087f5b;
+    margin-bottom: 12px;
+}
+
+.login-description {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #687785;
+    margin-bottom: 28px;
+}
+
+/* Form */
+
+form {
+    text-align: left;
+}
+
+form label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 10px;
+}
+
+/* Phone input */
+
+.phone-input {
+    display: flex;
+    align-items: center;
+    border: 2px solid #d5e8df;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fffb;
+    transition: 0.3s;
+}
+
+.phone-input:focus-within {
+    border-color: #11998e;
+    box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.12);
+}
+
+.country-code {
+    padding: 15px;
+    background: #e4f8ee;
+    color: #087f5b;
+    font-weight: 700;
+    border-right: 1px solid #d5e8df;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #243447;
+    background: #f8fffb;
+    border: 2px solid #d5e8df;
+    border-radius: 12px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.phone-input input {
+    border: none;
+    border-radius: 0;
+}
+
+input:focus {
+    border-color: #11998e;
+    box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.12);
+}
+
+/* Buttons */
+
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    color: white;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(17, 153, 142, 0.25);
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #087f5b, #11998e);
+    box-shadow: 0 9px 20px rgba(17, 153, 142, 0.35);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Change number button */
+
+#back-button {
+    margin-top: 12px;
+    color: #087f5b;
+    background: #e4f8ee;
+    box-shadow: none;
+}
+
+#back-button:hover {
+    background: #c8f2df;
+}
+
+/* Login messages */
+
+#message {
+    margin-top: 18px;
+    font-size: 14px;
+    color: #087f5b;
+    line-height: 1.5;
+}
+
+/* Security note */
+
+.security-note {
+    margin-top: 25px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #547365;
+    background: #edfff5;
+    border-radius: 10px;
+}
+
+/* Footer */
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #24634d;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* Mobile responsive design */
+
+@media (max-width: 480px) {
+
+    .header {
+        padding: 25px 15px;
+    }
+
+    .header h1 {
+        font-size: 27px;
+    }
+
+    .logo-icon {
+        font-size: 34px;
+    }
+
+    .header p {
+        font-size: 14px;
+    }
+
+    .login-container {
+        padding: 25px 15px;
+    }
+
+    .login-card {
+        padding: 30px 22px;
+        border-radius: 20px;
+    }
+
+    .login-card h2 {
+        font-size: 25px;
+    }
+
+    .login-description {
+        font-size: 14px;
+    }
+}
+.village-header {
+    background-color: #2e7d32;
+    color: white;
+    text-align: center;
+    padding: 15px;
+}
+
+.village-header h1 {
+    margin: 0;
+    font-size: 28px;
+}

@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VillageConnect - Attendance</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        header {
+            background: #176b45;
+            color: white;
+            padding: 25px;
+        }
+
+        nav {
+            background: #125637;
+            padding: 15px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 25px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+        }
+
+        .count {
+            font-size: 35px;
+            font-weight: bold;
+            color: #176b45;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        button {
+            background: #176b45;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #125637;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #176b45;
+            color: white;
+        }
+
+        .present {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>VillageConnect</h1>
+    <p>Daily Attendance Management</p>
+</header>
+
+<nav>
+    <a href="attendance.html">Attendance</a>
+    <a href="problems.html">Problems</a>
+    <a href="index.html">Logout</a>
+</nav>
+
+<div class="container">
+
+    <h2>Daily Worker Attendance</h2>
+
+    <div class="card">
+        <h2>Today's Attendance</h2>
+
+        <p id="todayDate"></p>
+
+        <p class="count" id="attendanceCount">0</p>
+
+        <p>People Present Today</p>
+    </div>
+
+    <div class="card">
+
+        <h2>Mark Your Attendance</h2>
+
+        <form id="attendanceForm">
+
+            <label>Full Name</label>
+            <input type="text" id="workerName" required>
+
+            <label>Role</label>
+            <select id="workerRole" required>
+                <option value="">Select Role</option>
+                <option>Sanitation Worker</option>
+                <option>Water Supply Worker</option>
+                <option>Road Maintenance Worker</option>
+                <option>Municipal Member</option>
+                <option>Village Official</option>
+                <option>Other</option>
+            </select>
+
+            <label>Contact Number</label>
+            <input type="tel" id="workerContact"
+                   pattern="[0-9]{10}"
+                   maxlength="10"
+                   required>
+
+            <label>Today's Work Summary</label>
+            <textarea id="workSummary" rows="4" required></textarea>
+
+            <button type="submit">Mark Present</button>
+
+        </form>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Today's Attendance Records</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Contact</th>
+                    <th>Work Summary</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+
+            <tbody id="attendanceRecords"></tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+    // Get today's date in local time
+    function getToday() {
+        let today = new Date();
+
+        let year = today.getFullYear();
+
+        let month = String(today.getMonth() + 1).padStart(2, "0");
+
+        let day = String(today.getDate()).padStart(2, "0");
+
+        return year + "-" + month + "-" + day;
+    }
+
+    let today = getToday();
+
+    // Load saved attendance
+    let attendance = JSON.parse(localStorage.getItem("attendance")) || [];
+
+    // Show today's date
+    document.getElementById("todayDate").textContent =
+        new Date().toLocaleDateString();
+
+    // Mark attendance
+    document.getElementById("attendanceForm").addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        let contact = document.getElementById("workerContact").value.trim();
+
+        // Prevent duplicate attendance for the same person on the same day
+        let alreadyMarked = attendance.some(function(record) {
+            return record.date === today && record.contact === contact;
+        });
+
+        if (alreadyMarked) {
+            alert("This person has already marked attendance today!");
+            return;
+        }
+
+        let record = {
+            id: Date.now(),
+
+            name: document.getElementById("workerName").value.trim(),
+
+            role: document.getElementById("workerRole").value,
+
+            contact: contact,
+
+            workSummary: document.getElementById("workSummary").value.trim(),
+
+            date: today,
+
+            time: new Date().toLocaleTimeString()
+        };
+
+        attendance.push(record);
+
+        localStorage.setItem("attendance", JSON.stringify(attendance));
+
+        displayAttendance();
+
+        this.reset();
+
+        alert("Attendance marked successfully!");
+
+    });
+
+    // Display today's attendance
+    function displayAttendance() {
+
+        let records = document.getElementById("attendanceRecords");
+
+        records.innerHTML = "";
+
+        let todayRecords = attendance.filter(function(record) {
+            return record.date === today;
+        });
+
+        todayRecords.forEach(function(record) {
+
+            let row = document.createElement("tr");
+
+            [
+                record.name,
+                record.role,
+                record.contact,
+                record.workSummary,
+                record.time
+            ].forEach(function(value) {
+
+                let cell = document.createElement("td");
+
+                cell.textContent = value;
+
+                row.appendChild(cell);
+
+            });
+
+            records.appendChild(row);
+
+        });
+
+        document.getElementById("attendanceCount").textContent =
+            todayRecords.length;
+
+    }
+
+    displayAttendance();
+
+</script>
+
+</body>
+</html>
