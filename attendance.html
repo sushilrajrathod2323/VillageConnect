@@ -238,7 +238,18 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const attendanceCollection = collection(db, "attendance");
+    import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, function(user) {
+    if (user) {
+        console.log("User is signed in:", user.uid);
+    } else {
+        console.log("No user is signed in!");
+    }
+});
     // Get today's date in local time
     function getToday() {
         const today = new Date();
