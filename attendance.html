@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +84,11 @@
             background: #125637;
         }
 
+        button:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -103,6 +107,11 @@
             color: white;
         }
 
+        .message {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
         .present {
             color: #15803d;
             font-weight: bold;
@@ -115,6 +124,10 @@
 
             th, td {
                 padding: 6px;
+            }
+
+            nav a {
+                margin-right: 12px;
             }
         }
     </style>
@@ -139,20 +152,15 @@
 
     <div class="card">
         <h2>Today's Attendance</h2>
-
         <p id="todayDate"></p>
-
         <p class="count" id="attendanceCount">0</p>
-
         <p>People Present Today</p>
     </div>
 
     <div class="card">
-
         <h2>Mark Your Attendance</h2>
 
         <form id="attendanceForm">
-
             <label>Full Name</label>
             <input type="text" id="workerName" required>
 
@@ -168,22 +176,23 @@
             </select>
 
             <label>Contact Number</label>
-            <input type="tel" id="workerContact"
-                   pattern="[0-9]{10}"
-                   maxlength="10"
-                   required>
+            <input
+                type="tel"
+                id="workerContact"
+                pattern="[0-9]{10}"
+                maxlength="10"
+                required
+            >
 
             <label>Today's Work Summary</label>
             <textarea id="workSummary" rows="4" required></textarea>
 
-            <button type="submit">Mark Present</button>
-
+            <button type="submit" id="submitButton">Mark Present</button>
+            <p class="message" id="formMessage" role="status"></p>
         </form>
-
     </div>
 
     <div class="card">
-
         <h2>Today's Attendance Records</h2>
 
         <table>
@@ -196,97 +205,83 @@
                     <th>Time</th>
                 </tr>
             </thead>
-
             <tbody id="attendanceRecords"></tbody>
         </table>
-
     </div>
 
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+
+    import {
+        getFirestore,
+        collection,
+        addDoc,
+        query,
+        where,
+        getDocs,
+        onSnapshot
+    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
+    // Your Firebase project configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyAN0_rn-dpXNFzBkKOj8eT0SboCZuEA6hU",
+        authDomain: "villageconnect-f66a2.firebaseapp.com",
+        projectId: "villageconnect-f66a2",
+        storageBucket: "villageconnect-f66a2.firebasestorage.app",
+        messagingSenderId: "326691335569",
+        appId: "1:326691335569:web:66cf4e8dd8b67eff23be30",
+        measurementId: "G-KY82ZB8EBR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const attendanceCollection = collection(db, "attendance");
 
     // Get today's date in local time
     function getToday() {
-        let today = new Date();
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
 
-        let year = today.getFullYear();
-
-        let month = String(today.getMonth() + 1).padStart(2, "0");
-
-        let day = String(today.getDate()).padStart(2, "0");
-
-        return year + "-" + month + "-" + day;
+        return `${year}-${month}-${day}`;
     }
 
-    let today = getToday();
+    const today = getToday();
 
-    // Load saved attendance
-    let attendance = JSON.parse(localStorage.getItem("attendance")) || [];
-
-    // Show today's date
     document.getElementById("todayDate").textContent =
         new Date().toLocaleDateString();
 
-    // Mark attendance
-    document.getElementById("attendanceForm").addEventListener("submit", function(event) {
+    const attendanceForm = document.getElementById("attendanceForm");
+    const submitButton = document.getElementById("submitButton");
+    const formMessage = document.getElementById("formMessage");
+    const attendanceRecords = document.getElementById("attendanceRecords");
 
-        event.preventDefault();
+    // Listen for shared attendance records for today.
+    // When another user adds a record, this table updates automatically.
+    const todayQuery = query(
+        attendanceCollection,
+        where("date", "==", today)
+    );
 
-        let contact = document.getElementById("workerContact").value.trim();
+    onSnapshot(todayQuery, function(snapshot) {
+        attendanceRecords.innerHTML = "";
 
-        // Prevent duplicate attendance for the same person on the same day
-        let alreadyMarked = attendance.some(function(record) {
-            return record.date === today && record.contact === contact;
+        const records = [];
+
+        snapshot.forEach(function(documentSnapshot) {
+            records.push(documentSnapshot.data());
         });
 
-        if (alreadyMarked) {
-            alert("This person has already marked attendance today!");
-            return;
-        }
-
-        let record = {
-            id: Date.now(),
-
-            name: document.getElementById("workerName").value.trim(),
-
-            role: document.getElementById("workerRole").value,
-
-            contact: contact,
-
-            workSummary: document.getElementById("workSummary").value.trim(),
-
-            date: today,
-
-            time: new Date().toLocaleTimeString()
-        };
-
-        attendance.push(record);
-
-        localStorage.setItem("attendance", JSON.stringify(attendance));
-
-        displayAttendance();
-
-        this.reset();
-
-        alert("Attendance marked successfully!");
-
-    });
-
-    // Display today's attendance
-    function displayAttendance() {
-
-        let records = document.getElementById("attendanceRecords");
-
-        records.innerHTML = "";
-
-        let todayRecords = attendance.filter(function(record) {
-            return record.date === today;
+        // Sort by time, newest first
+        records.sort(function(a, b) {
+            return (b.createdAt || 0) - (a.createdAt || 0);
         });
 
-        todayRecords.forEach(function(record) {
-
-            let row = document.createElement("tr");
+        records.forEach(function(record) {
+            const row = document.createElement("tr");
 
             [
                 record.name,
@@ -295,26 +290,71 @@
                 record.workSummary,
                 record.time
             ].forEach(function(value) {
-
-                let cell = document.createElement("td");
-
-                cell.textContent = value;
-
+                const cell = document.createElement("td");
+                cell.textContent = value || "";
                 row.appendChild(cell);
-
             });
 
-            records.appendChild(row);
-
+            attendanceRecords.appendChild(row);
         });
 
         document.getElementById("attendanceCount").textContent =
-            todayRecords.length;
+            records.length;
 
-    }
+    }, function(error) {
+        console.error("Could not load attendance:", error);
+        formMessage.textContent =
+            "Could not load shared attendance. Check your Firebase Firestore setup.";
+    });
 
-    displayAttendance();
+    // Mark attendance in Firestore
+    attendanceForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
 
+        submitButton.disabled = true;
+        formMessage.textContent = "Saving attendance...";
+
+        const contact = document.getElementById("workerContact").value.trim();
+
+        try {
+            // Check whether this contact has already marked attendance today
+            const duplicateQuery = query(
+                attendanceCollection,
+                where("date", "==", today),
+                where("contact", "==", contact)
+            );
+
+            const duplicateSnapshot = await getDocs(duplicateQuery);
+
+            if (!duplicateSnapshot.empty) {
+                formMessage.textContent =
+                    "This person has already marked attendance today.";
+                return;
+            }
+
+            const record = {
+                name: document.getElementById("workerName").value.trim(),
+                role: document.getElementById("workerRole").value,
+                contact: contact,
+                workSummary: document.getElementById("workSummary").value.trim(),
+                date: today,
+                time: new Date().toLocaleTimeString(),
+                createdAt: Date.now()
+            };
+
+            await addDoc(attendanceCollection, record);
+
+            attendanceForm.reset();
+            formMessage.textContent = "Attendance marked successfully!";
+
+        } catch (error) {
+            console.error("Error saving attendance:", error);
+            formMessage.textContent =
+                "Could not save attendance. Check your internet connection and Firestore rules.";
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
 </script>
 
 </body>
